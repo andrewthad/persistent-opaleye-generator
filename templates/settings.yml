@@ -1,0 +1,9 @@
+Int:  Column PGInt4
+Severity:  Column PGInt4
+Text: Column PGText
+Day:  Column PGDate
+Bool: Column PGBool
+ScanStatus: Column Text
+Markdown: Column PGText
+SeverityCounts: Column PGText
+UTCTime: Column PGTimestamptz

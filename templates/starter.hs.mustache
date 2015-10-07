@@ -1,0 +1,49 @@
+module Model.Opaleye where
+
+import Prelude
+import Data.Text (Text)
+import Opaleye
+import Data.Profunctor.Product 
+import Data.Profunctor.Product.TH (makeAdaptorAndInstance)
+
+data Customer' a b = Customer'
+  { customerId :: a
+  , customerName :: b
+  }
+type Customer = Customer' Int Text
+type CustomerColumn = Customer' (Column PGInt4) (Column PGText)
+
+$(makeAdaptorAndInstance "pCustomer" ''Customer')
+
+customerTable :: Table CustomerColumn CustomerColumn
+customerTable = Table "customer" $ pCustomer $ Customer'
+  { customerId  = required "id"
+  , customerName = required "name"
+  }
+
+customerQuery :: Query CustomerColumn
+customerQuery = queryTable customerTable
+
+{{#models}}
+data {{model_name.title}}' {{#fields}}{{index.letter}} {{/fields}}= {{model_name.title}}' 
+  { {{#fields}}{{^first}}  , {{/first}}{{model_name.camel}}{{field_name.title}} :: {{index.letter}}
+{{/fields}}
+  }
+
+type {{model_name.title}} = {{model_name.title}}' {{#fields}}({{type}}) {{/fields}}
+type {{model_name.title}}Column = {{model_name.title}}' {{#fields}}({{pgtype}}) {{/fields}}
+{{^custom_pk}}newtype {{model_name.title}}Id' a = {{model_name.title}}Id a
+$(makeAdaptorAndInstance "p{{model_name.title}}Id" ''{{model_name.title}}Id')
+{{/custom_pk}}
+
+{{model_name.camel}}Table :: Table {{model_name.title}}Column {{model_name.title}}Column
+{{model_name.camel}}Table = Table "{{model_name.snake}}" $ p{{model_name.title}} $ {{model_name.title}}'
+  { {{#fields}}{{^first}}  , {{/first}}{{model_name.camel}}{{field_name.title}} = {{#required}}required{{/required}}{{^required}}optional{{/required}} "{{field_name.snake}}"
+{{/fields}}
+  }
+
+{{model_name.camel}}Query :: Query {{model_name.title}}Column
+{{model_name.camel}}Query = queryTable {{model_name.camel}}Table
+
+{{/models}}
+

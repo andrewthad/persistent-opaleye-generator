@@ -1,0 +1,106 @@
+ScheduledScan
+  name Text
+  nessusId ScanId
+  status ScanStatus default='resting'
+
+-- Reports, Hosts, Items, and Plugins are
+-- to be treated as immutable data. This 
+-- makes it possible to cache the results
+-- of aggregate queries.
+
+Instance
+  scheduledScan ScheduledScanId
+  report        ReportId
+  UniqueInstance report
+
+Customer
+  name Text 
+  deriving Generic
+
+Report
+  customer      CustomerId default='1'
+  name          Text     default='zzDefault-Report-Name'
+  time          UTCTime 
+  before        Markdown default=''
+  after         Markdown default=''
+
+CachedReportSeverityCount
+  report ReportId
+  counts SeverityCounts
+  Primary report 
+
+Host json
+  report     ReportId
+  ip         Text
+  fqdn       Text Maybe
+  os         Text default=''
+  Primary report ip
+  deriving Eq Show
+  -- start      UTCTime
+  -- end        UTCTime
+  -- mac        Text Maybe
+  -- fqdn       Text Maybe
+  -- netbios    Text Maybe
+  -- notes      Text Maybe
+  -- riskScore  Text Maybe
+
+Item 
+  report ReportId
+  ip Text
+  pluginIdent Int
+  output Text
+  port Int
+  svcName Text
+  protocol Text
+  Foreign Host fk_item_host report ip
+  Foreign Plugin fk_item_plugin pluginIdent
+
+Plugin 
+  ident Int
+  plugdata PlugdataId
+  Primary ident
+  deriving Eq Show
+
+Plugdata
+  severity Severity
+  name Text
+  family Text
+  description Markdown
+  publicationDate Day
+  solution Text
+  synopsis Text
+  type Text
+  fname Text
+  scriptVersion Text
+  -- cveAdvisory ListText default='[]'
+  deriving Show
+  deriving Eq
+  deriving Ord
+  deriving Generic
+
+Cve
+  pluginIdent Int
+  name Text
+  Primary pluginIdent name
+
+Pluglink
+  plugin Int
+  grouplug GrouplugId
+
+Grouplug
+  report ReportId
+  plugdata PlugdataId
+
+Custoplug
+  customer CustomerId
+  pluginIdent Int
+  plugdata PlugdataId
+  Primary pluginIdent customer
+  
+Hostplug
+  customer CustomerId
+  ip Text
+  pluginIdent Int
+  plugdata PlugdataId
+  Primary pluginIdent ip customer
+
